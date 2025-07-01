@@ -31,6 +31,8 @@ public:
 
     BOOL ReadRegisterValueString(const TCHAR* path, const TCHAR* item, TCHAR* valueStirng, DWORD valueSize);
     BOOL ReadServicePipeName(TCHAR* pipeName, DWORD nameSize);
+
+    static void access_pipedata(LPPIPEINST);
 private:
     SafeFunc()
     {

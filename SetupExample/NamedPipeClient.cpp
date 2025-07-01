@@ -5,6 +5,23 @@
 
 #define MODULE_TAG  ("NamedPipeClient")
 
+bool NamedPipeClient::send_request_notify_bool()
+{
+	CommmonPipePacket request, response;
+
+	request.hdr.magic = PIPE_HEADER_MAGIC;
+	request.hdr.type = msg_type_notify_multi_boot_req;
+
+	if (send_request(false, (uint8_t*)&request, sizeof(request), &response))
+	{
+		Print_Debug("pipe client notify multi boot success!\n");
+		return true;
+	}
+
+	return false;
+   
+}
+
 bool NamedPipeClient::send_request(bool to_service, uint8_t* req, int req_len, CommmonPipePacket* resp)
 {
     BOOL fSuccess;

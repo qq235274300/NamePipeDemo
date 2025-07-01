@@ -132,7 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="logging.cpp" />
-    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="ServerMain.cpp" />
     <ClCompile Include="NamedPipeClient.cpp" />
     <ClCompile Include="NamedPipeServer.cpp" />
     <ClCompile Include="SafeFunc.cpp" />

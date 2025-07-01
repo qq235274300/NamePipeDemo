@@ -4,6 +4,9 @@
 class NamedPipeClient
 {
 public:
+    bool send_request_notify_bool();
+
+public:
     bool send_request(bool to_service, uint8_t* req, int req_len, CommmonPipePacket* resp = nullptr);
 
 public:

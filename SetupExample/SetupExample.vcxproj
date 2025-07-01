@@ -210,7 +210,7 @@
     <ClCompile Include="Game3DInfo.cpp" />
     <ClCompile Include="Game3DUtils.cpp" />
     <ClCompile Include="logging.cpp" />
-    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="ClientMain.cpp" />
     <ClCompile Include="NamedPipeClient.cpp" />
     <ClCompile Include="NamedPipeServer.cpp" />
     <ClCompile Include="PEInfo.cpp" />
