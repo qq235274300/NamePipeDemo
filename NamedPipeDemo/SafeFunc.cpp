@@ -2,10 +2,10 @@
 #include <sddl.h>
 #include <aclapi.h>
 #include <AccCtrl.h>
-
 #include <shlobj_core.h>
-
-#define MODULE_TAG  ("SafeFunc")
+#include "logging.h"
+#include "ServerInstance.h"
+#define MODULE_TAG  ("SeverSafeFunc")
 
 SafeFunc* SafeFunc::sdk = nullptr;
 bool SafeFunc::initialed = FALSE;
@@ -290,6 +290,38 @@ bool SafeFunc::CheckACLRules(const TCHAR* Path)
     return false;
 }
 
+BOOL SafeFunc::UpdatePipeName(const TCHAR* pipeName, DWORD size)
+{
+    return WriteRegisterValueString(TEXT("SOFTWARE\\Lenovo\\Bino3D"), TEXT("PipeName"), pipeName, size);
+}
+
+BOOL SafeFunc::UpdateServicePipeName(const TCHAR* pipeName, DWORD size)
+{
+    WriteRegisterValueString(TEXT("SOFTWARE\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, size);
+    WriteRegisterValueString(TEXT("SOFTWARE\\WOW6432Node\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, size);
+    return TRUE;
+}
+
+BOOL SafeFunc::WriteRegisterValueString(const TCHAR* path, const TCHAR* item, const TCHAR* valueStirng, DWORD valueSize)
+{
+    HKEY hKey = nullptr, hTempKey = nullptr;
+    BOOL ret = FALSE;
+
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, NULL, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+    {
+        if (ERROR_SUCCESS == RegCreateKey(hKey, path, &hTempKey))
+        {
+            if (ERROR_SUCCESS == RegSetValueEx(hTempKey, item, 0, REG_SZ, (CONST BYTE*)valueStirng, (DWORD)wcsnlen_s(valueStirng, valueSize) * 2))
+            {
+                ret = TRUE;
+            }
+            RegCloseKey(hTempKey);
+        }
+        RegCloseKey(hKey);
+    }
+    return ret;
+}
+
 
 BOOL SafeFunc::ReadRegisterValueString(const TCHAR* path, const TCHAR* item, TCHAR* valueStirng, DWORD valueSize)
 {
@@ -323,94 +355,36 @@ BOOL SafeFunc::ReadServicePipeName(TCHAR* pipeName, DWORD nameSize)
     return ReadRegisterValueString(TEXT("SOFTWARE\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, nameSize);
 }
 
-void SafeFunc::access_pipedata(LPPIPEINST)
+void SafeFunc::access_pipedata(LPPIPEINST data)
 {
-	PipePacketHeader* hdr = (PipePacketHeader*)&data->chRequest[0];
-	CommmonPipePacket* package = (CommmonPipePacket*)&data->chReply[0];
+    PipePacketHeader* hdr = (PipePacketHeader*)&data->chRequest[0];
+    CommmonPipePacket* package = (CommmonPipePacket*)&data->chReply[0];
 
-	package->hdr.magic = PIPE_HEADER_MAGIC;
+    package->hdr.magic = PIPE_HEADER_MAGIC;
 
-	switch (hdr->type)
-	{
-	case msg_type_get_shared_semaphore_handle_req:  //ask the shared semaphore handle request.
-	{
-		HANDLE handle = nullptr;
-		package->hdr.type = msg_type_get_shared_semaphore_handle_resp;
-		if (!DuplicateHandle(GetCurrentProcess(), AvatarFunction::Instance()->semaphore_get(), data->client_process_handle, &handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
-		{
-			Print_Error("duplicate the semaphore handle failed, err = %d, client_process_handle = 0x%x\n", GetLastError(), data->client_process_handle);
-			package->u.resp_shared_handle.handle = 0;
-		}
-		else
-		{
-			int index = 0;
+    switch (hdr->type)
+    {
 
-			package->u.resp_shared_handle.handle = (uint64_t)handle;
+    case msg_type_get_shared_memory_handle_req:
+    {
+        HANDLE handle = nullptr;
+        package->hdr.type = msg_type_get_shared_memory_handle_resp;
+        if (!DuplicateHandle(GetCurrentProcess(), ServerInstance::Instance()->shared_memory_handle_get(), data->client_process_handle, &handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
+        {
+            Print_Error("duplicate the shared memory handle failed, err = %d\n", GetLastError());
+            package->u.resp_shared_handle.handle = 0;
+        }
+        else
+        {
+            package->u.resp_shared_handle.handle = (uint64_t)handle;
+        }
+        Print_Debug("pipe server receive msg_type_get_shared_memory_handle_req and response shared memory handle = 0x%x\n", package->u.resp_shared_handle.handle);
+        break;
+    }
 
-			char process_path[MAX_PATH];
-			char process_name[MAX_PATH];
-			if (GetModuleFileNameExA(data->client_process_handle, 0, process_path, MAX_PATH) > 0)
-			{
-				index = (int)strnlen_s(process_path, MAX_PATH);
-				for (index; index > 0; index--)
-				{
-					if (process_path[index] == '\\')
-					{
-						process_path[index] = 0;
-						strcpy_s(process_name, MAX_PATH, &process_path[index + 1]);
-						break;
-					}
-					else if (process_path[index] >= 'a' && process_path[index] <= 'z')
-					{
-						process_path[index] = process_path[index] - 'a' + 'A';
-					}
-				}//for (index; index > 0; index--)
-
-				AvatarFunction::Instance()->set_virtual_camera_process_name(process_name, (int)strnlen_s(process_name, MAX_PATH));
-			}
-			else
-			{
-				Print_Debug("Get target process name failed! errCode = %d\n", GetLastError());
-			}
-		}
-		Print_Debug("pipe server receive msg_type_get_shared_semaphore_handle_req and response sem handle = 0x%x\n", package->u.resp_shared_handle.handle);
-		break;
-	}
-	case msg_type_notify_multi_boot_req:    //ask the notify server that multi boot
-		package->hdr.type = msg_type_notify_multi_boot_resp;
-		AvatarFunction::Instance()->same_process_running();
-		Print_Debug("pipe server receive msg_type_notify_multi_boot_req\n");
-		break;
-	case msg_type_get_shared_memory_handle_req:
-	{
-		HANDLE handle = nullptr;
-		package->hdr.type = msg_type_get_shared_memory_handle_resp;
-		if (!DuplicateHandle(GetCurrentProcess(), AvatarFunction::Instance()->shared_memory_handle_get(), data->client_process_handle, &handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
-		{
-			Print_Error("duplicate the shared memory handle failed, err = %d\n", GetLastError());
-			package->u.resp_shared_handle.handle = 0;
-		}
-		else
-		{
-			package->u.resp_shared_handle.handle = (uint64_t)handle;
-		}
-		Print_Debug("pipe server receive msg_type_get_shared_memory_handle_req and response shared memory handle = 0x%x\n", package->u.resp_shared_handle.handle);
-		break;
-	}
-	case msg_type_notify_semaphore_add_req:
-		AvatarFunction::Instance()->client_process_list_push(data->client_process_id, data->client_process_handle);
-		package->hdr.type = msg_type_notify_semaphore_add_resp;
-		AvatarFunction::Instance()->notify_avatar_virtual_camera_open();
-		break;
-
-	case msg_type_notify_semaphore_dec_req:
-		AvatarFunction::Instance()->client_process_list_remove(data->client_process_id);
-		package->hdr.type = msg_type_notify_semaphore_dec_resp;
-		AvatarFunction::Instance()->notify_avatar_virtual_camera_close();
-		break;
-	default:
-		break;
-	}
-	data->cbToWrite = sizeof(CommmonPipePacket);
+    default:
+        break;
+    }
+    data->cbToWrite = sizeof(CommmonPipePacket);
 }
 

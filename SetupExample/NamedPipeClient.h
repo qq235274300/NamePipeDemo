@@ -5,14 +5,14 @@ class NamedPipeClient
 {
 public:
     bool send_request_notify_bool();
-
+    bool send_request_get_shared_memory_handle(HANDLE& shared_memory_handle);
 public:
     bool send_request(bool to_service, uint8_t* req, int req_len, CommmonPipePacket* resp = nullptr);
 
 public:
     TCHAR pipeName[2][MAX_PATH] = { L"" };
     bool pipeName_valid = false;
-    
+
     CommmonPipePacket resp;
 };
 

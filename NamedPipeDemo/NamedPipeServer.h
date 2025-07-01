@@ -31,11 +31,17 @@ class NamedPipeServer
 public:
     NamedPipeServer();
     ~NamedPipeServer();
-    
+
     bool CreateServerPipe(Access_PipeData callback);
     void DestroyServerPipe();
-
     BOOL ConnectToNewClient(HANDLE, LPOVERLAPPED);
+
+    bool PollServerPipe(DWORD timeout);
+    bool IsReady();
+    VOID DisconnectAndReconnect(DWORD);
+    VOID ProcessAPIRequest(LPPIPEINST);
+private:
+    bool CheckAndProcessClientAPIRequest(DWORD timeout);
 
 private:
     TCHAR pipeName[MAX_PATH];

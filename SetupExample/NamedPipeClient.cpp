@@ -7,19 +7,37 @@
 
 bool NamedPipeClient::send_request_notify_bool()
 {
-	CommmonPipePacket request, response;
+    CommmonPipePacket request, response;
 
-	request.hdr.magic = PIPE_HEADER_MAGIC;
-	request.hdr.type = msg_type_notify_multi_boot_req;
+    request.hdr.magic = PIPE_HEADER_MAGIC;
+    request.hdr.type = msg_type_notify_multi_boot_req;
 
-	if (send_request(false, (uint8_t*)&request, sizeof(request), &response))
-	{
-		Print_Debug("pipe client notify multi boot success!\n");
-		return true;
-	}
+    if (send_request(false, (uint8_t*)&request, sizeof(request), &response))
+    {
+        Print_Debug("pipe client notify multi boot success!\n");
+        return true;
+    }
 
-	return false;
-   
+    return false;
+
+}
+
+bool NamedPipeClient::send_request_get_shared_memory_handle(HANDLE& shared_memory_handle)
+{
+    CommmonPipePacket request, response;
+    request.hdr.magic = PIPE_HEADER_MAGIC;
+    request.hdr.type = msg_type_get_shared_memory_handle_req;
+    request.u.req_shared_handle.process_ID = GetCurrentProcessId();
+
+    if (send_request(false, (uint8_t*)&request, sizeof(request), &response))
+    {
+        shared_memory_handle = (HANDLE)response.u.resp_shared_handle.handle;
+        Print_Debug("pipe client get shared memory handle success, memory handle = 0x%x!\n", shared_memory_handle);
+        return true;
+    }
+
+    shared_memory_handle = nullptr;
+    return false;
 }
 
 bool NamedPipeClient::send_request(bool to_service, uint8_t* req, int req_len, CommmonPipePacket* resp)
@@ -52,16 +70,17 @@ bool NamedPipeClient::send_request(bool to_service, uint8_t* req, int req_len, C
         resp,           // buffer to receive reply 
         sizeof(*resp),  // size of read buffer 
         &cbRead,        // number of bytes read 
-        5000);         // waits for 5 seconds 
+        10000);         // waits for 10 seconds 
 
     if (!fSuccess)
     {
         auto e = GetLastError();
         if (e == ERROR_MORE_DATA)
         {
+            //如果数据超过buf 打印
             Print_Debug("More data, read %u bytes\n", cbRead);
         }
-          
+
         //else
         //  Print_Error("CallNamedPipe error %u\n", e);
     }

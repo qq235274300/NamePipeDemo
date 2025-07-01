@@ -2,15 +2,16 @@
 #include <filesystem>
 #include <string>
 #include <algorithm>
-#include "NamedPipeServer.h"	
+#include "ServerInstance.h"  
 
 
 
 
 int main()
 {
-	NamedPipeServer server;	
-	server.CreateServerPipe();
-	
-	return 0;
+
+    ServerInstance::Instance()->initialize();
+
+
+    return 0;
 }

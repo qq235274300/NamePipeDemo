@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="logging.cpp" />
+    <ClCompile Include="ServerInstance.cpp" />
     <ClCompile Include="ServerMain.cpp" />
     <ClCompile Include="NamedPipeClient.cpp" />
     <ClCompile Include="NamedPipeServer.cpp" />
@@ -144,6 +145,7 @@
     <ClInclude Include="NamedPipeServer.h" />
     <ClInclude Include="pipe_define.h" />
     <ClInclude Include="SafeFunc.h" />
+    <ClInclude Include="ServerInstance.h" />
     <ClInclude Include="utilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
