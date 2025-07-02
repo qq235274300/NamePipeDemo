@@ -33,6 +33,25 @@ bool NamedPipeClient::send_request_get_shared_memory_handle(HANDLE& shared_memor
     {
         shared_memory_handle = (HANDLE)response.u.resp_shared_handle.handle;
         Print_Debug("pipe client get shared memory handle success, memory handle = 0x%x!\n", shared_memory_handle);
+
+        pHookinfo = (hook_info*)MapViewOfFile(
+			shared_memory_handle,
+			FILE_MAP_READ,
+			0, 0,
+			sizeof(hook_info));
+		if (!pHookinfo)
+		{
+            Print_Debug("MapViewOfFile failed: %lu\n", GetLastError());
+			return false;
+		}
+        Print_Debug("hook_ver_major: %u\n", pHookinfo->hook_ver_major);
+        Print_Debug("hook_ver_minor: %u\n", pHookinfo->hook_ver_minor);
+        Print_Debug("Mouse: %.2f, %.2f\n", pHookinfo->gameMouse_x, pHookinfo->gameMouse_y);
+        Print_Debug("Resolution: %u x %u\n", pHookinfo->cx, pHookinfo->cy);
+
+		// 用完后记得释放视图（注意：句柄不要 CloseHandle！除非你自己 Duplicate 过）
+		UnmapViewOfFile(pHookinfo);
+       
         return true;
     }
 
@@ -62,6 +81,8 @@ bool NamedPipeClient::send_request(bool to_service, uint8_t* req, int req_len, C
     {
         pipe_index = 0;
     }
+
+
     //打开管道 写入数据 读取响应 关闭句柄
     fSuccess = CallNamedPipe(
         pipeName[pipe_index],       // pipe name 

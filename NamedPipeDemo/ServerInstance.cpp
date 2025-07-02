@@ -5,13 +5,60 @@
 #define MODULE_TAG  ("ServerInstance")
 ServerInstance* ServerInstance::instance = NULL;
 
+hook_info* pHookInfo = nullptr;
+
 ServerInstance::~ServerInstance()
 {
 
 }
 
+bool ServerInstance::InitializeHookInfoSharedMemory()
+{
+	shared_memory_handle = CreateFileMapping(
+		INVALID_HANDLE_VALUE,
+		nullptr,
+		PAGE_READWRITE,
+		0,
+		sizeof(hook_info),
+		nullptr); // 可选命名 NULL 表示匿名共享
+
+	if (!shared_memory_handle)
+	{
+		Print_Error("CreateFileMapping for hook_info failed: %lu\n", GetLastError());
+		return false;
+	}
+
+	pHookInfo = (hook_info*)MapViewOfFile(
+		shared_memory_handle,
+		FILE_MAP_ALL_ACCESS,
+		0, 0,
+		sizeof(hook_info));
+
+	if (!pHookInfo)
+	{
+		Print_Error("MapViewOfFile for hook_info failed: %lu\n", GetLastError());
+		CloseHandle(shared_memory_handle);
+		shared_memory_handle = nullptr;
+		return false;
+	}
+
+	// 初始化 hook_info 内容（可选）
+	ZeroMemory(pHookInfo, sizeof(hook_info));
+	pHookInfo->hook_ver_major = 123;
+	pHookInfo->hook_ver_minor = 456;
+    pHookInfo->cx = 1920;
+    pHookInfo->cy = 1080;
+	Print_Debug("pHookInfo initialized at %p\n", pHookInfo);
+	return true;
+}
+
+
+
 bool ServerInstance::initialize()
 {
+
+    InitializeHookInfoSharedMemory();
+
     GUID guid;
     int randNumber = 0;
 
@@ -58,14 +105,14 @@ void ServerInstance::server_thread_routine()
     }
     Print_Debug("create server pipe OK!\n");
 
-    while (is_running)
-    {
-        if (server.IsReady())
-        {
-            server.PollServerPipe(1000);
-        }
+	while (is_running)
+	{
+		if (server.IsReady())
+		{
+			server.PollServerPipe(1000);
+		}
 
-    }
+	}
 
 }
 

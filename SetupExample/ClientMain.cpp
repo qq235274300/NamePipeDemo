@@ -6,10 +6,14 @@
 
 
 
+
+
+
 int main()
 {
 	NamedPipeClient client;
-	client.send_request_notify_bool();
+	HANDLE shared_memory_handle = NULL;
+	client.send_request_get_shared_memory_handle(shared_memory_handle);
 
 	while (true)
 	{
