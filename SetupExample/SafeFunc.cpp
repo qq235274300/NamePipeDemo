@@ -298,7 +298,7 @@ BOOL SafeFunc::ReadRegisterValueString(const TCHAR* path, const TCHAR* item, TCH
     BOOL result = FALSE;
     DWORD dwBufferSize;
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, path, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, path, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         SecureZeroMemory(&szBuffer[0], sizeof(szBuffer));
 
@@ -320,6 +320,6 @@ BOOL SafeFunc::ReadRegisterValueString(const TCHAR* path, const TCHAR* item, TCH
 
 BOOL SafeFunc::ReadServicePipeName(TCHAR* pipeName, DWORD nameSize)
 {
-    return ReadRegisterValueString(TEXT("SOFTWARE\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, nameSize);
+    return ReadRegisterValueString(TEXT("Software\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, nameSize);
 }
 

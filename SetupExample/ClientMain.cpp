@@ -11,5 +11,8 @@ int main()
 	NamedPipeClient client;
 	client.send_request_notify_bool();
 
+	while (true)
+	{
+	};
 	return 0;
 }
