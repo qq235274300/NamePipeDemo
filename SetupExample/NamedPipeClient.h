@@ -50,17 +50,30 @@ static_assert(sizeof(hook_info) == 656);
 
 #pragma pack(pop)
 
+
+struct shtex_data
+{
+	uint32_t tex_handle;
+	uint32_t capture_processid = -1000000;
+};
+
+
+
 class NamedPipeClient
 {
 public:
     bool send_request_notify_bool();
+	//获取phookinfo共享内存句柄
     bool send_request_get_shared_memory_handle(HANDLE& shared_memory_handle);
+	//获取游戏画面共享纹理句柄
+	bool send_request_get_shared_texture_handle(HANDLE& shared_texture_handle);
 public:
     bool send_request(bool to_service, uint8_t* req, int req_len, CommmonPipePacket* resp = nullptr);
 
 
 private:
 	hook_info* pHookinfo = nullptr;
+	void* sharedmem_info = nullptr;
 public:
     TCHAR pipeName[2][MAX_PATH] = { L"" };
     bool pipeName_valid = false;

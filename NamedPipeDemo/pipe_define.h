@@ -11,6 +11,8 @@ enum avatar_pipe_msg_type {
 	msg_type_notify_multi_boot_resp,
 	msg_type_get_shared_memory_handle_req = 0x0005,
 	msg_type_get_shared_memory_handle_resp,
+	msg_type_get_shared_texture_handle_req,
+	msg_type_get_shared_texture_handle_resq,
 	msg_type_notify_semaphore_add_req = 0x0007,
 	msg_type_notify_semaphore_add_resp,
 	msg_type_notify_semaphore_dec_req = 0x0009,

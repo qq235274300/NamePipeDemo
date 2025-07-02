@@ -59,6 +59,25 @@ bool NamedPipeClient::send_request_get_shared_memory_handle(HANDLE& shared_memor
     return false;
 }
 
+bool NamedPipeClient::send_request_get_shared_texture_handle(HANDLE& shared_texture_handle)
+{
+	CommmonPipePacket request, response;
+	request.hdr.magic = PIPE_HEADER_MAGIC;
+	request.hdr.type = msg_type_get_shared_texture_handle_req;
+	request.u.req_shared_handle.process_ID = GetCurrentProcessId();
+
+	if (send_request(false, (uint8_t*)&request, sizeof(request), &response))
+	{
+        shared_texture_handle = (HANDLE)response.u.resp_shared_handle.handle;
+		Print_Debug("pipe client get shared memory handle2 success, memory handle = 0x%x!\n", shared_texture_handle);
+
+		return true;
+	}
+
+    shared_texture_handle = nullptr;
+	return false;
+}
+
 bool NamedPipeClient::send_request(bool to_service, uint8_t* req, int req_len, CommmonPipePacket* resp)
 {
     BOOL fSuccess;

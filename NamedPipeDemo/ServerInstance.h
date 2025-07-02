@@ -61,6 +61,34 @@ static_assert(sizeof(hook_info) == 656);
 
 extern hook_info* pHookInfo;
 
+
+//”Œœ∑ª≠√Ê
+struct shtex_data
+{
+	uint32_t tex_handle;
+	uint32_t capture_processid;
+};
+
+struct capture_data
+{
+	uint32_t cx;
+	uint32_t cy;
+	bool using_shtex;
+	bool multisampled;
+
+	union
+	{
+		/* shared texture */
+		struct
+		{
+			shtex_data* shtex_info;
+			HANDLE handle;
+		} shtex;
+		
+	};
+} data;
+
+
 class ServerInstance
 {
 public:

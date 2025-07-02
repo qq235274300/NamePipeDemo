@@ -12,7 +12,8 @@
 int main()
 {
 	NamedPipeClient client;
-	HANDLE shared_memory_handle = NULL;
+	HANDLE shared_memory_handle = NULL; //phookinfo
+	void* shmem_info = nullptr;// backbuffer
 	client.send_request_get_shared_memory_handle(shared_memory_handle);
 
 	while (true)
