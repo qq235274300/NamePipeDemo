@@ -297,8 +297,8 @@ BOOL SafeFunc::UpdatePipeName(const TCHAR* pipeName, DWORD size)
 
 BOOL SafeFunc::UpdateServicePipeName(const TCHAR* pipeName, DWORD size)
 {
-    WriteRegisterValueString(TEXT("SOFTWARE\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, size);
-    WriteRegisterValueString(TEXT("SOFTWARE\\WOW6432Node\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, size);
+    WriteRegisterValueString(TEXT("Software\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, size);
+    WriteRegisterValueString(TEXT("Software\\WOW6432Node\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, size);
     return TRUE;
 }
 
@@ -306,8 +306,8 @@ BOOL SafeFunc::WriteRegisterValueString(const TCHAR* path, const TCHAR* item, co
 {
     HKEY hKey = nullptr, hTempKey = nullptr;
     BOOL ret = FALSE;
-
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, NULL, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+    //HKEY_CURRENT_USER  HKEY_LOCAL_MACHINE 需管理员权限
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, NULL, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
         if (ERROR_SUCCESS == RegCreateKey(hKey, path, &hTempKey))
         {
@@ -329,8 +329,8 @@ BOOL SafeFunc::ReadRegisterValueString(const TCHAR* path, const TCHAR* item, TCH
     unsigned char szBuffer[MAX_PATH];
     BOOL result = FALSE;
     DWORD dwBufferSize;
-
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, path, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    //HKEY_LOCAL_MACHINE 
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, path, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         SecureZeroMemory(&szBuffer[0], sizeof(szBuffer));
 
@@ -352,7 +352,7 @@ BOOL SafeFunc::ReadRegisterValueString(const TCHAR* path, const TCHAR* item, TCH
 
 BOOL SafeFunc::ReadServicePipeName(TCHAR* pipeName, DWORD nameSize)
 {
-    return ReadRegisterValueString(TEXT("SOFTWARE\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, nameSize);
+    return ReadRegisterValueString(TEXT("Software\\Lenovo\\Bino3D"), TEXT("ServicePipeName"), pipeName, nameSize);
 }
 
 void SafeFunc::access_pipedata(LPPIPEINST data)

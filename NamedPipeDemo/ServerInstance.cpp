@@ -25,7 +25,7 @@ bool ServerInstance::initialize()
         guid.Data4[4], guid.Data4[5], guid.Data4[6]);
 
     SafeFunc::Instance()->UpdateServicePipeName(servicePipeName, MAX_PATH);
-    SafeFunc::Instance()->WriteRegisterValueString(TEXT("SOFTWARE\\Lenovo\\Bino3D"), TEXT("booting_time"), booting_time, MAX_PATH);
+    SafeFunc::Instance()->WriteRegisterValueString(TEXT("Software\\Lenovo\\Bino3D"), TEXT("booting_time"), booting_time, MAX_PATH);
 
     is_running = true;
     server_thread = std::thread(&ServerInstance::server_thread_routine, this);

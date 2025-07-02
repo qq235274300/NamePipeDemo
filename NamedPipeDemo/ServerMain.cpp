@@ -12,6 +12,8 @@ int main()
 
     ServerInstance::Instance()->initialize();
 
-
+    while (true)
+    {
+    }
     return 0;
 }
