@@ -73,7 +73,7 @@ public:
 
 private:
 	hook_info* pHookinfo = nullptr;
-	void* sharedmem_info = nullptr;
+	shtex_data* sharedmem_info = nullptr;
 public:
     TCHAR pipeName[2][MAX_PATH] = { L"" };
     bool pipeName_valid = false;

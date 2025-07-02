@@ -52,13 +52,46 @@ bool ServerInstance::InitializeHookInfoSharedMemory()
 	return true;
 }
 
+bool ServerInstance::InitializeHookInfoSharedTexture()
+{
+	shared_texture_handle = CreateFileMapping(
+		INVALID_HANDLE_VALUE,
+		nullptr,
+		PAGE_READWRITE,
+		0,
+		sizeof(shtex_data),
+		nullptr); // 可选命名 NULL 表示匿名共享
+
+	if (!shared_texture_handle)
+	{
+		Print_Error("CreateFileMapping for shared_texture failed: %lu\n", GetLastError());
+		return false;
+	}
+
+	 pShtex = (shtex_data*)MapViewOfFile(shared_texture_handle, FILE_MAP_WRITE, 0, 0, sizeof(shtex_data));
+
+	if (!pShtex)
+	{
+		Print_Error("MapViewOfFile for shared_texture failed: %lu\n", GetLastError());
+		CloseHandle(shared_texture_handle);
+		shared_texture_handle = nullptr;
+		return false;
+	}
+
+	// 初始化 hook_info 内容（可选）
+	pShtex->tex_handle = 0x31212356;
+	pShtex->capture_processid = GetCurrentProcessId();
+	Print_Debug("pShtex initialized at %p\n", pShtex);
+	return true;
+}
+
 
 
 bool ServerInstance::initialize()
 {
 
     InitializeHookInfoSharedMemory();
-
+	InitializeHookInfoSharedTexture();
     GUID guid;
     int randNumber = 0;
 
@@ -92,6 +125,11 @@ bool ServerInstance::initialize()
 HANDLE ServerInstance::shared_memory_handle_get()
 {
     return shared_memory_handle;
+}
+
+HANDLE ServerInstance::shared_texture_handle_get()
+{
+	return shared_texture_handle;
 }
 
 void ServerInstance::server_thread_routine()

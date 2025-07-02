@@ -381,6 +381,24 @@ void SafeFunc::access_pipedata(LPPIPEINST data)
         Print_Debug("pipe server receive msg_type_get_shared_memory_handle_req and response shared memory handle = 0x%x\n", package->u.resp_shared_handle.handle);
         break;
     }
+    case msg_type_get_shared_texture_handle_req:
+    {
+		HANDLE handle = nullptr;
+		package->hdr.type = msg_type_get_shared_texture_handle_resq;
+        
+		if (!DuplicateHandle(GetCurrentProcess(), ServerInstance::Instance()->shared_texture_handle_get(), data->client_process_handle, &handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
+		{
+			Print_Error("duplicate the shared texture handle failed, err = %d\n", GetLastError());
+			package->u.resp_shared_handle.handle = 0;
+		}
+		else
+		{
+			package->u.resp_shared_handle.handle = (uint64_t)handle;
+		}
+		Print_Debug("pipe server receive msg_type_get_shared_memory_handle_req and response shared memory handle = 0x%x\n", package->u.resp_shared_handle.handle);
+		break;
+    }
+        
 
     default:
         break;

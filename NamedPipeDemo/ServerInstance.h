@@ -69,24 +69,7 @@ struct shtex_data
 	uint32_t capture_processid;
 };
 
-struct capture_data
-{
-	uint32_t cx;
-	uint32_t cy;
-	bool using_shtex;
-	bool multisampled;
 
-	union
-	{
-		/* shared texture */
-		struct
-		{
-			shtex_data* shtex_info;
-			HANDLE handle;
-		} shtex;
-		
-	};
-} data;
 
 
 class ServerInstance
@@ -95,7 +78,7 @@ public:
     ~ServerInstance();
 
 	bool InitializeHookInfoSharedMemory();
-
+	bool InitializeHookInfoSharedTexture();
     static ServerInstance* Instance()
     {
         if (instance == NULL)
@@ -108,6 +91,7 @@ public:
 public:
     bool initialize();
     HANDLE shared_memory_handle_get();
+	HANDLE shared_texture_handle_get();
 private:
     void server_thread_routine();
 
@@ -122,7 +106,8 @@ private:
     bool is_running = false;
     HANDLE shared_memory_handle =NULL;
 
-
+	HANDLE shared_texture_handle = NULL;
+	shtex_data* pShtex = nullptr;
 private:
     ServerInstance()
     {

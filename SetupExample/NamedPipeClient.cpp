@@ -69,7 +69,25 @@ bool NamedPipeClient::send_request_get_shared_texture_handle(HANDLE& shared_text
 	if (send_request(false, (uint8_t*)&request, sizeof(request), &response))
 	{
         shared_texture_handle = (HANDLE)response.u.resp_shared_handle.handle;
-		Print_Debug("pipe client get shared memory handle2 success, memory handle = 0x%x!\n", shared_texture_handle);
+		Print_Debug("pipe client get shared texture handle success, texture handle = 0x%x!\n", shared_texture_handle);
+
+        sharedmem_info = (shtex_data*)MapViewOfFile(
+			shared_texture_handle,
+			FILE_MAP_READ,
+			0, 0,
+			sizeof(shtex_data));
+        if (sharedmem_info)
+        {
+            Print_Debug("tex_handle = 0x%x\n", sharedmem_info->tex_handle);
+            Print_Debug("pid = %u\n", sharedmem_info->capture_processid);
+        }
+
+		if (!sharedmem_info)
+		{
+			Print_Debug("MapViewOfFile failed: %lu\n", GetLastError());
+			return false;
+		}
+        UnmapViewOfFile(sharedmem_info);
 
 		return true;
 	}
